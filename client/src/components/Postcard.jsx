@@ -1,6 +1,25 @@
 import React, { useState } from 'react';
-import { ArrowBigUp, ArrowBigDown, MessageCircle, Share2, MoreVertical, Send} from 'lucide-react';
+import { ArrowBigUp, ArrowBigDown, MessageCircle, Share2, MoreVertical, Send } from 'lucide-react';
 import api from '../api';
+
+// Helper function to format timestamp to human-readable time ago
+const formatTimeAgo = (dateString) => {
+  if (!dateString) return 'Just now';
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - date) / 1000);
+
+  if (isNaN(diffInSeconds) || diffInSeconds < 60) return 'Just now';
+
+  const minutes = Math.floor(diffInSeconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+};
 
 export default function PostCard({ post }) {
   const [upvotes, setUpvotes] = useState(post.upvotes || 0);
@@ -17,12 +36,10 @@ export default function PostCard({ post }) {
     try {
       // Optimistic client update
       if (userVote === type) {
-        // Untoggle
         setUserVote(null);
         if (type === 'UP') setUpvotes((v) => Math.max(0, v - 1));
         if (type === 'DOWN') setDownvotes((v) => Math.max(0, v - 1));
       } else {
-        // Toggle or switch
         if (userVote === 'UP') setUpvotes((v) => Math.max(0, v - 1));
         if (userVote === 'DOWN') setDownvotes((v) => Math.max(0, v - 1));
 
@@ -36,7 +53,8 @@ export default function PostCard({ post }) {
       console.error('Voting failed:', err);
     }
   };
-       const toggleComments = async () => {
+
+  const toggleComments = async () => {
     const nextState = !showComments;
     setShowComments(nextState);
 
@@ -53,7 +71,7 @@ export default function PostCard({ post }) {
     }
   };
 
-         const handleAddComment = async (e) => {
+  const handleAddComment = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
 
@@ -71,6 +89,7 @@ export default function PostCard({ post }) {
       setSubmittingComment(false);
     }
   };
+
   return (
     <article className="bg-[#0B1528] border border-slate-800 rounded-2xl p-6 hover:border-slate-700 transition-colors space-y-4">
       {/* Author Header */}
@@ -84,7 +103,7 @@ export default function PostCard({ post }) {
               <span className="font-semibold text-white text-sm">
                 {post.author_name || 'Anonymous Contributor'}
               </span>
-              <span className="text-xs text-slate-500">• {post.time_ago || 'Just now'}</span>
+              <span className="text-xs text-slate-500">• {formatTimeAgo(post.created_at)}</span>
             </div>
             <span className="inline-block mt-0.5 px-2 py-0.5 text-[11px] font-medium rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
               {post.category || 'General'}
@@ -135,7 +154,7 @@ export default function PostCard({ post }) {
             <span>{downvotes}</span>
           </button>
 
-           {/* Comment Count / Trigger */}
+          {/* Comment Count / Trigger */}
           <button
             onClick={toggleComments}
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-colors ${

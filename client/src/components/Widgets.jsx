@@ -1,66 +1,117 @@
-import React from 'react';
-import { TrendingUp, Users } from 'lucide-react';
+import React, { useState } from 'react';
+import { TrendingUp, Users, Check, Plus } from 'lucide-react';
 
-const CATEGORIES = [
-  { name: 'Tech & AI', count: '1.2K opinions' },
-  { name: 'Higher Education', count: '890 opinions' },
-  { name: 'Public Policy', count: '654 opinions' },
-  { name: 'Campus Life', count: '430 opinions' },
+const TRENDING_TOPICS = [
+  { tag: 'Tech', label: '#Tech & AI', count: '1.2k opinions' },
+  { tag: 'Campus', label: '#Campus Life', count: '430 opinions' },
+  { tag: 'Governance', label: '#Public Policy', count: '654 opinions' },
+  { tag: 'Society', label: '#Higher Education', count: '890 opinions' },
 ];
 
-const SUGGESTIONS = [
-  { name: 'Rohan Mehta', role: 'Student Delegate' },
-  { name: 'Ananya Verma', role: 'Policy Researcher' },
-  { name: 'Karan Johar', role: 'Tech Enthusiast' },
+const INITIAL_SUGGESTIONS = [
+  { id: 1, name: 'Rohan Mehta', role: 'Student Delegate', initial: 'R' },
+  { id: 2, name: 'Ananya Verma', role: 'Policy Researcher', initial: 'A' },
+  { id: 3, name: 'Karan Johar', role: 'Tech Enthusiast', initial: 'K' },
 ];
 
-export default function Widgets() {
+export default function Widgets({ onCategoryClick }) {
+  const [following, setFollowing] = useState({});
+
+  const toggleFollow = (id) => {
+    setFollowing((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
   return (
-    <aside className="w-80 shrink-0 py-6 space-y-6 hidden lg:block">
-      {/* Trending Categories */}
-      <div className="bg-[#0B1528] border border-slate-800 rounded-2xl p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="font-bold text-white text-sm flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-blue-400" />
-            Trending Categories
-          </h3>
-          <span className="text-xs text-blue-400 cursor-pointer hover:underline">View all</span>
+    <aside className="w-80 hidden lg:flex flex-col gap-5 shrink-0 sticky top-20 h-[calc(100vh-6rem)] overflow-y-auto scrollbar-none pb-6">
+      {/* Trending Categories Widget */}
+      <div className="bg-[#0B1528] border border-slate-800/80 rounded-2xl p-4 shadow-xl">
+        <div className="flex items-center justify-between mb-3.5">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-blue-500" />
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+              Trending Categories
+            </h3>
+          </div>
+          <span className="text-[10px] text-blue-400 font-semibold cursor-pointer hover:underline">
+            View all
+          </span>
         </div>
-        <div className="space-y-3">
-          {CATEGORIES.map((c) => (
-            <div key={c.name} className="flex items-center justify-between text-sm group cursor-pointer">
-              <span className="text-slate-300 group-hover:text-blue-400 transition-colors font-medium">
-                #{c.name}
+
+        <div className="space-y-1">
+          {TRENDING_TOPICS.map((item) => (
+            <button
+              key={item.tag}
+              onClick={() => onCategoryClick && onCategoryClick(item.tag)}
+              className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-900/80 transition-all text-left group"
+            >
+              <div>
+                <p className="text-xs font-semibold text-slate-300 group-hover:text-blue-400 transition-colors">
+                  {item.label}
+                </p>
+                <p className="text-[10px] text-slate-500">{item.count}</p>
+              </div>
+              <span className="text-[10px] bg-slate-900 text-slate-400 group-hover:text-white px-2 py-1 rounded-lg border border-slate-800">
+                Explore
               </span>
-              <span className="text-xs text-slate-500">{c.count}</span>
-            </div>
+            </button>
           ))}
         </div>
       </div>
 
-      {/* Community Recommendations */}
-      <div className="bg-[#0B1528] border border-slate-800 rounded-2xl p-5 space-y-4">
-        <h3 className="font-bold text-white text-sm flex items-center gap-2">
-          <Users className="w-4 h-4 text-blue-400" />
-          Who to Follow
-        </h3>
-        <div className="space-y-3.5">
-          {SUGGESTIONS.map((person) => (
-            <div key={person.name} className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-slate-700 text-white flex items-center justify-center text-xs font-semibold">
-                  {person.name.charAt(0)}
+      {/* Who to Follow Widget */}
+      <div className="bg-[#0B1528] border border-slate-800/80 rounded-2xl p-4 shadow-xl">
+        <div className="flex items-center gap-2 mb-3.5">
+          <Users className="w-4 h-4 text-blue-500" />
+          <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+            Who to Follow
+          </h3>
+        </div>
+
+        <div className="space-y-3">
+          {INITIAL_SUGGESTIONS.map((person) => {
+            const isFollowed = following[person.id];
+            return (
+              <div key={person.id} className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-xs font-bold flex items-center justify-center shrink-0">
+                    {person.initial}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-white truncate leading-tight">
+                      {person.name}
+                    </p>
+                    <p className="text-[10px] text-slate-500 truncate leading-tight mt-0.5">
+                      {person.role}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-white">{person.name}</p>
-                  <p className="text-[11px] text-slate-400">{person.role}</p>
-                </div>
+
+                <button
+                  onClick={() => toggleFollow(person.id)}
+                  className={`text-[11px] font-semibold px-3 py-1.5 rounded-xl border transition-all flex items-center gap-1 shrink-0 ${
+                    isFollowed
+                      ? 'bg-slate-800 border-slate-700 text-emerald-400'
+                      : 'bg-[#0066FF] hover:bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-500/20'
+                  }`}
+                >
+                  {isFollowed ? (
+                    <>
+                      <Check className="w-3 h-3" />
+                      <span>Following</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-3 h-3" />
+                      <span>Follow</span>
+                    </>
+                  )}
+                </button>
               </div>
-              <button className="text-xs font-semibold px-3 py-1.5 bg-blue-600/10 text-blue-400 hover:bg-blue-600 hover:text-white rounded-lg border border-blue-500/20 transition-all">
-                Follow
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </aside>
