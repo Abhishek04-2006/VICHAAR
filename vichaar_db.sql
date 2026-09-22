@@ -1,3 +1,4 @@
+-- SQLBook: Code
 -- Active: 1774068085074@@127.0.0.1@3306
 DROP DATABASE IF EXISTS vichaar_db;
 CREATE DATABASE vichaar_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

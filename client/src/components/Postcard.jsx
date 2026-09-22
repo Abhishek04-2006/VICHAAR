@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowBigUp, ArrowBigDown, MessageCircle, Share2, MoreVertical, Send } from 'lucide-react';
+import { ArrowBigUp, ArrowBigDown, MessageCircle, Share2, MoreVertical, Send, Bookmark } from 'lucide-react';
 import api from '../api';
 
 // Helper function to format timestamp to human-readable time ago
@@ -21,7 +21,7 @@ const formatTimeAgo = (dateString) => {
   return `${days}d ago`;
 };
 
-export default function PostCard({ post }) {
+export default function PostCard({ post, isBookmarked = false, onToggleBookmark }) {
   const [upvotes, setUpvotes] = useState(post.upvotes || 0);
   const [downvotes, setDownvotes] = useState(post.downvotes || 0);
   const [userVote, setUserVote] = useState(post.user_vote || null); // 'UP', 'DOWN', or null
@@ -168,9 +168,23 @@ export default function PostCard({ post }) {
           </button>
         </div>
 
-        <button className="text-slate-400 hover:text-white transition-colors p-1.5">
-          <Share2 className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          {/* Bookmark Button */}
+          <button
+            onClick={onToggleBookmark}
+            className={`p-1.5 rounded-lg transition-colors ${
+              isBookmarked ? 'text-blue-500' : 'text-slate-400 hover:text-white'
+            }`}
+            title={isBookmarked ? "Remove Bookmark" : "Save Bookmark"}
+          >
+            <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
+          </button>
+
+          {/* Share Button */}
+          <button className="text-slate-400 hover:text-white transition-colors p-1.5">
+            <Share2 className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Expanded Comments Thread */}
