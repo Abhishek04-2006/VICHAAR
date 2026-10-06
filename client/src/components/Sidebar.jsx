@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Home,
   Compass,
@@ -6,7 +7,7 @@ import {
   Bookmark,
   User,
   Settings,
-  PlusCircle,
+  Plus,
   Quote
 } from 'lucide-react';
 
@@ -17,6 +18,16 @@ export default function Sidebar({
   onOpenPostModal,
   onOpenLogin
 }) {
+  const location = useLocation();
+
+  // Current path ke hisaab se dynamic active state evaluate karna
+  const currentPath = location.pathname;
+  const currentTab = 
+    currentPath === '/' ? 'home' :
+    currentPath.startsWith('/categories') ? 'categories' :
+    currentPath.startsWith('/profile') ? 'profile' :
+    activeTab;
+
   const menuItems = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'categories', label: 'Categories', icon: Compass },
@@ -35,25 +46,29 @@ export default function Sidebar({
   };
 
   return (
-    <aside className="w-64 hidden md:flex flex-col justify-between shrink-0 sticky top-20 h-[calc(100vh-6rem)] pb-4">
-      <div className="space-y-6">
+    <aside className="w-60 hidden md:flex flex-col justify-between shrink-0 sticky top-20 h-[calc(100vh-5.5rem)] pb-4 select-none">
+      <div className="space-y-5">
         {/* Navigation Items */}
-        <nav className="space-y-1.5">
+        <nav className="space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = activeTab === item.id;
+            const isActive = currentTab === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => handleMenuClick(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-semibold transition-all ${
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
                   isActive
-                    ? 'bg-[#0066FF] text-white shadow-lg shadow-blue-500/25'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-900/80'
+                    ? 'bg-[#181A20] text-[#F4F4F5] border border-[#272A34]'
+                    : 'text-[#8E929E] hover:text-[#F4F4F5] hover:bg-[#121418] border border-transparent'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
-                <span>{item.label}</span>
+                <Icon
+                  className={`w-4 h-4 transition-colors ${
+                    isActive ? 'text-[#F4F4F5]' : 'text-[#71717A]'
+                  }`}
+                />
+                <span className="tracking-tight">{item.label}</span>
               </button>
             );
           })}
@@ -62,21 +77,26 @@ export default function Sidebar({
         {/* Publish Action Button */}
         <button
           onClick={onOpenPostModal}
-          className="w-full bg-[#0066FF] hover:bg-blue-600 text-white text-xs font-bold py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-xl shadow-blue-500/20"
+          className="w-full bg-[#EDEDED] hover:bg-white active:scale-[0.99] text-[#090A0D] text-xs font-semibold py-2.5 px-3.5 rounded-lg flex items-center justify-center gap-2 transition-all shadow-sm shadow-white/5"
         >
-          <PlusCircle className="w-4 h-4" />
+          <Plus className="w-4 h-4 stroke-[2.5]" />
           <span>Publish Opinion</span>
         </button>
       </div>
 
-      {/* Philosophy Card */}
-      <div className="p-4 rounded-2xl bg-[#0B1528] border border-slate-800/80 space-y-2">
-        <Quote className="w-4 h-4 text-blue-500" />
-        <p className="text-[11px] italic text-slate-400 leading-relaxed">
+      {/* Grounded Philosophy Card */}
+      <div className="p-3.5 rounded-xl bg-[#111317] border border-[#1F2228] space-y-1.5">
+        <div className="flex items-center gap-1.5 text-[#52525B]">
+          <Quote className="w-3.5 h-3.5" />
+          <span className="text-[10px] font-mono uppercase tracking-wider text-[#71717A]">
+            Charter
+          </span>
+        </div>
+        <p className="text-[11px] text-[#A1A1AA] leading-relaxed">
           "Different minds build a brighter tomorrow."
         </p>
-        <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase block">
-          — VICHAAR
+        <span className="text-[10px] font-semibold text-[#52525B] block pt-0.5">
+          VICHAAR Campus
         </span>
       </div>
     </aside>

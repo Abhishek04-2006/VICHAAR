@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Widgets from '../components/Widgets';
-import PostCard from '../components/PostCard';
+import PostCard from '../components/Postcard';
 import CreatePostModal from '../components/CreatePostModal';
 import { Compass, Bookmark, TrendingUp, Settings as SettingsIcon, Sliders, Shield, Bell } from 'lucide-react';
 import api from '../api';

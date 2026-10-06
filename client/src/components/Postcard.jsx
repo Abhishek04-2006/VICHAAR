@@ -1,40 +1,25 @@
 import React, { useState } from 'react';
-import { ArrowBigUp, ArrowBigDown, MessageCircle, Share2, MoreVertical, Send, Bookmark } from 'lucide-react';
+import { ArrowBigUp, ArrowBigDown, MessageCircle, Share2, MoreHorizontal, Bookmark, CheckCircle2, Award } from 'lucide-react';
 import api from '../api';
 
-// Helper function to format timestamp to human-readable time ago
 const formatTimeAgo = (dateString) => {
   if (!dateString) return 'Just now';
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffInSeconds = Math.floor((now - date) / 1000);
-
+  const diffInSeconds = Math.floor((new Date() - new Date(dateString)) / 1000);
   if (isNaN(diffInSeconds) || diffInSeconds < 60) return 'Just now';
-
   const minutes = Math.floor(diffInSeconds / 60);
   if (minutes < 60) return `${minutes}m ago`;
-
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
-
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  return `${Math.floor(hours / 24)}d ago`;
 };
 
 export default function PostCard({ post, isBookmarked = false, onToggleBookmark }) {
   const [upvotes, setUpvotes] = useState(post.upvotes || 0);
   const [downvotes, setDownvotes] = useState(post.downvotes || 0);
-  const [userVote, setUserVote] = useState(post.user_vote || null); // 'UP', 'DOWN', or null
-  const [showComments, setShowComments] = useState(false);
-  const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState('');
-  const [commentCount, setCommentCount] = useState(post.comment_count || 0);
-  const [loadingComments, setLoadingComments] = useState(false);
-  const [submittingComment, setSubmittingComment] = useState(false);
+  const [userVote, setUserVote] = useState(post.user_vote || null);
 
   const handleVote = async (type) => {
     try {
-      // Optimistic client update
       if (userVote === type) {
         setUserVote(null);
         if (type === 'UP') setUpvotes((v) => Math.max(0, v - 1));
@@ -42,191 +27,121 @@ export default function PostCard({ post, isBookmarked = false, onToggleBookmark 
       } else {
         if (userVote === 'UP') setUpvotes((v) => Math.max(0, v - 1));
         if (userVote === 'DOWN') setDownvotes((v) => Math.max(0, v - 1));
-
         setUserVote(type);
         if (type === 'UP') setUpvotes((v) => v + 1);
         if (type === 'DOWN') setDownvotes((v) => v + 1);
       }
-
       await api.post(`/posts/${post.id}/vote`, { voteType: type });
     } catch (err) {
-      console.error('Voting failed:', err);
-    }
-  };
-
-  const toggleComments = async () => {
-    const nextState = !showComments;
-    setShowComments(nextState);
-
-    if (nextState && comments.length === 0) {
-      try {
-        setLoadingComments(true);
-        const res = await api.get(`/posts/${post.id}/comments`);
-        setComments(res.data.comments || []);
-      } catch (err) {
-        console.error('Failed to load comments:', err);
-      } finally {
-        setLoadingComments(false);
-      }
-    }
-  };
-
-  const handleAddComment = async (e) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
-
-    setSubmittingComment(true);
-    try {
-      const res = await api.post(`/posts/${post.id}/comments`, { content: newComment });
-      if (res.data.comment) {
-        setComments((prev) => [...prev, res.data.comment]);
-        setCommentCount((prev) => prev + 1);
-        setNewComment('');
-      }
-    } catch (err) {
-      alert(err.response?.data?.error || 'Please sign in to comment.');
-    } finally {
-      setSubmittingComment(false);
+      console.error('Vote failed:', err);
     }
   };
 
   return (
-    <article className="bg-[#0B1528] border border-slate-800 rounded-2xl p-6 hover:border-slate-700 transition-colors space-y-4">
-      {/* Author Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-semibold text-white">
-            {post.author_name ? post.author_name.charAt(0) : 'U'}
+    <article className="bg-[#111317] border border-[#1F2228] hover:border-[#2C3038] rounded-xl p-5 transition-all duration-200">
+      {/* Header: Author & Credibility Meta */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-[#181A20] border border-[#272B35] flex items-center justify-center font-bold text-xs text-[#E4E4E7] shrink-0">
+            {post.author_name ? post.author_name.charAt(0).toUpperCase() : 'U'}
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-white text-sm">
-                {post.author_name || 'Anonymous Contributor'}
-              </span>
-              <span className="text-xs text-slate-500">• {formatTimeAgo(post.created_at)}</span>
-            </div>
-            <span className="inline-block mt-0.5 px-2 py-0.5 text-[11px] font-medium rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+          
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            {/* Author Name */}
+            <span className="font-semibold text-[#F4F4F5] hover:underline cursor-pointer">
+                {post.author_name || 'Anonymous'}
+               </span>
+                {/* Real Earned Badges Only - No Dummy/Fallback */}
+            {post.author_badge === 'VERIFIED_DEBATER' && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/25">
+           <Award className="w-3 h-3 stroke-[2.2]" />
+            Top Debater
+          </span>
+        )}
+            
+            {post.author_badge === 'DELEGATE' && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+           <CheckCircle2 className="w-3 h-3 stroke-[2.2]" />
+             Delegate
+          </span>
+        )}
+
+          {/* User ka actual Department (agar profile me added ho) */}
+          {post.author_department && (
+        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#181A20] text-[#8E929E] border border-[#272B35]">
+          {post.author_department}
+        </span>
+          )}
+            <span className="text-[#52525B]">•</span>
+            <span className="text-[#71717A] text-[11px]">{formatTimeAgo(post.created_at)}</span>
+
+            {/* Post Category */}
+            <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-[#181A20] text-[#A1A1AA] border border-[#262931]">
               {post.category || 'General'}
             </span>
           </div>
         </div>
-        <button className="text-slate-500 hover:text-slate-300">
-          <MoreVertical className="w-4 h-4" />
+
+        <button className="text-[#71717A] hover:text-[#D4D4D8] p-1">
+          <MoreHorizontal className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Post Content */}
-      <div className="space-y-1.5">
-        <h2 className="text-lg font-bold text-white hover:text-blue-400 transition-colors cursor-pointer">
+      {/* Main Content */}
+      <div className="space-y-1.5 cursor-pointer">
+        <h2 className="text-[15px] font-semibold text-[#F4F4F5] leading-snug tracking-tight hover:text-blue-400 transition-colors">
           {post.title}
         </h2>
-        <p className="text-sm text-slate-300 leading-relaxed line-clamp-3">
+        <p className="text-[13px] text-[#A1A1AA] leading-relaxed line-clamp-3">
           {post.content}
         </p>
       </div>
 
-      {/* Engagement Footer */}
-      <div className="flex items-center justify-between pt-2 border-t border-slate-800/60">
-        <div className="flex items-center gap-2">
-          {/* Upvote */}
-          <button
-            onClick={() => handleVote('UP')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-              userVote === 'UP'
-                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
-                : 'bg-slate-800/50 text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-emerald-400'
-            }`}
-          >
-            <ArrowBigUp className={`w-4 h-4 ${userVote === 'UP' ? 'fill-current' : ''}`} />
-            <span>{upvotes}</span>
-          </button>
+      {/* Modern Interaction Bar */}
+      <div className="flex items-center justify-between pt-3.5 mt-3.5 border-t border-[#1A1C22]">
+        <div className="flex items-center gap-1.5">
+          {/* Vote Cluster */}
+          <div className="flex items-center bg-[#181A20] border border-[#262931] rounded-lg p-0.5">
+            <button
+              onClick={() => handleVote('UP')}
+              className={`p-1 rounded flex items-center gap-1 text-xs transition-colors ${
+                userVote === 'UP' ? 'text-emerald-400 bg-emerald-500/10' : 'text-[#71717A] hover:text-[#F4F4F5]'
+              }`}
+            >
+              <ArrowBigUp className={`w-4 h-4 ${userVote === 'UP' ? 'fill-current' : ''}`} />
+              <span className="font-mono text-[11px] pr-1">{upvotes}</span>
+            </button>
+            <span className="w-px h-3 bg-[#262931]"></span>
+            <button
+              onClick={() => handleVote('DOWN')}
+              className={`p-1 rounded text-xs transition-colors ${
+                userVote === 'DOWN' ? 'text-rose-400 bg-rose-500/10' : 'text-[#71717A] hover:text-[#F4F4F5]'
+              }`}
+            >
+              <ArrowBigDown className={`w-4 h-4 ${userVote === 'DOWN' ? 'fill-current' : ''}`} />
+            </button>
+          </div>
 
-          {/* Downvote */}
-          <button
-            onClick={() => handleVote('DOWN')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-              userVote === 'DOWN'
-                ? 'bg-rose-500/20 text-rose-400 border-rose-500/40'
-                : 'bg-slate-800/50 text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-rose-400'
-            }`}
-          >
-            <ArrowBigDown className={`w-4 h-4 ${userVote === 'DOWN' ? 'fill-current' : ''}`} />
-            <span>{downvotes}</span>
-          </button>
-
-          {/* Comment Count / Trigger */}
-          <button
-            onClick={toggleComments}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-              showComments 
-                ? 'bg-blue-600/20 text-blue-400 border-blue-500/40' 
-                : 'bg-slate-800/40 text-slate-400 border-transparent hover:text-slate-200'
-            }`}
-          >
-            <MessageCircle className="w-4 h-4" />
-            <span>{commentCount}</span>
+          <button className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-[#71717A] hover:text-[#E4E4E7] hover:bg-[#181A20] transition-colors">
+            <MessageCircle className="w-3.5 h-3.5" />
+            <span className="font-mono text-[11px]">{post.comment_count || 0}</span>
           </button>
         </div>
 
         <div className="flex items-center gap-1">
-          {/* Bookmark Button */}
           <button
             onClick={onToggleBookmark}
-            className={`p-1.5 rounded-lg transition-colors ${
-              isBookmarked ? 'text-blue-500' : 'text-slate-400 hover:text-white'
+            className={`p-1.5 rounded-md transition-colors ${
+              isBookmarked ? 'text-blue-400 bg-blue-500/10' : 'text-[#71717A] hover:text-[#F4F4F5]'
             }`}
-            title={isBookmarked ? "Remove Bookmark" : "Save Bookmark"}
           >
-            <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
+            <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-current' : ''}`} />
           </button>
-
-          {/* Share Button */}
-          <button className="text-slate-400 hover:text-white transition-colors p-1.5">
-            <Share2 className="w-4 h-4" />
+          <button className="text-[#71717A] hover:text-[#F4F4F5] p-1.5 rounded-md">
+            <Share2 className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
-
-      {/* Expanded Comments Thread */}
-      {showComments && (
-        <div className="pt-4 border-t border-slate-800/80 space-y-4">
-          <form onSubmit={handleAddComment} className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Join the discussion..."
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              className="flex-1 bg-[#030F26] border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 placeholder:text-slate-600"
-            />
-            <button
-              type="submit"
-              disabled={submittingComment}
-              className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all"
-            >
-              <Send className="w-3.5 h-3.5" />
-              <span>{submittingComment ? '...' : 'Reply'}</span>
-            </button>
-          </form>
-
-          <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
-            {loadingComments ? (
-              <p className="text-xs text-slate-500">Loading replies...</p>
-            ) : comments.length === 0 ? (
-              <p className="text-xs text-slate-500 italic">No comments yet. Start the conversation!</p>
-            ) : (
-              comments.map((c) => (
-                <div key={c.id} className="bg-[#030F26]/70 border border-slate-800/60 rounded-xl p-3 space-y-1">
-                  <div className="flex items-center justify-between text-[11px] text-slate-400">
-                    <span className="font-semibold text-slate-300">{c.author_name}</span>
-                    <span>{new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                  </div>
-                  <p className="text-xs text-slate-300">{c.content}</p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
     </article>
   );
 }

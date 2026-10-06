@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+
+// API instance
+import api from './api';
+
+// Components
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
-import HomePage from './pages/Home';
-import LoginPage from './pages/Login';
-import ProfilePage from './pages/Profile';
 import CreatePostModal from './components/CreatePostModal';
-import api from './api';
+
+// Pages
+import LoginPage from './pages/Login';
+import HomePage from './pages/Home';
+import ProfilePage from './pages/Profile';
+import useDebounce from './hooks/useDebounce';
+import CategoriesPage from './pages/Categories';
 
 export default function App() {
   const [posts, setPosts] = useState([]);
@@ -15,6 +23,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('home');
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const debouncedSearch = useDebounce(searchQuery, 350);
 
   // Auth State
   const [currentUser, setCurrentUser] = useState(() => {
@@ -24,11 +33,31 @@ export default function App() {
 
   const navigate = useNavigate();
 
-  const fetchPosts = async (cat = selectedCategory) => {
+  // Sync latest user details (including avatar) from DB on load
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      api.get('/auth/me')
+        .then((res) => {
+          setCurrentUser(res.data);
+          localStorage.setItem('user', JSON.stringify(res.data));
+        })
+        .catch(() => {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setCurrentUser(null);
+        });
+    }
+  }, []);
+
+  const fetchPosts = async (cat = selectedCategory, search = debouncedSearch) => {
     try {
       setLoading(true);
-      const url = cat && cat !== 'All' ? `/posts?category=${cat}` : '/posts';
-      const res = await api.get(url);
+      const params = new URLSearchParams();
+      if (cat && cat !== 'All') params.append('category', cat);
+      if (search && search.trim()) params.append('search', search.trim());
+
+      const res = await api.get(`/posts?${params.toString()}`);
       setPosts(res.data || []);
     } catch (err) {
       console.error('Failed to fetch posts:', err);
@@ -37,14 +66,20 @@ export default function App() {
     }
   };
 
+  // Jab bhi category ya debounced search badle, fetch execute ho
   useEffect(() => {
     if (currentUser) {
-      fetchPosts(selectedCategory);
+      fetchPosts(selectedCategory, debouncedSearch);
     }
-  }, [selectedCategory, currentUser]);
+  }, [selectedCategory, debouncedSearch, currentUser?.id]);
 
   const handlePostCreated = (newPost) => {
     setPosts((prev) => [newPost, ...prev]);
+  };
+
+  const handleUserUpdate = (updatedUserData) => {
+    setCurrentUser(updatedUserData);
+    localStorage.setItem('user', JSON.stringify(updatedUserData));
   };
 
   const handleLogout = () => {
@@ -54,8 +89,8 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-100 flex flex-col font-sans">
-      {/* Navbar tabhi dikhega jab user login ho chuka ho */}
+    <div className="min-h-screen bg-[#090A0D] text-[#EDEDED] flex flex-col font-sans selection:bg-blue-600 selection:text-white">
+      {/* Navbar */}
       {currentUser && (
         <Navbar
           currentUser={currentUser}
@@ -65,8 +100,8 @@ export default function App() {
         />
       )}
 
-      <div className={`w-full flex-1 ${currentUser ? 'max-w-7xl mx-auto px-4 flex gap-8 pt-6' : ''}`}>
-        {/* Left Sidebar bhi sirf login ke baad dikhega */}
+      <div className={`w-full flex-1 ${currentUser ? 'max-w-7xl mx-auto px-4 sm:px-6 flex gap-8 pt-6' : ''}`}>
+        {/* Left Sidebar */}
         {currentUser && (
           <Sidebar
             activeTab={activeTab}
@@ -100,7 +135,7 @@ export default function App() {
             }
           />
 
-          {/* 2. Home Page (Protected) */}
+          {/* 2. Home Page */}
           <Route
             path="/"
             element={
@@ -121,19 +156,22 @@ export default function App() {
             }
           />
 
-          {/* 3. Profile Page (Protected) */}
+          {/* 3. Profile Page (with onUserUpdate callback) */}
           <Route
             path="/profile"
             element={
               currentUser ? (
-                <ProfilePage currentUser={currentUser} />
+                <ProfilePage
+                  currentUser={currentUser}
+                  onUserUpdate={handleUserUpdate}
+                />
               ) : (
                 <Navigate to="/login" replace />
               )
             }
           />
 
-          {/* Fallback to login if not authenticated */}
+          {/* Fallback */}
           <Route
             path="*"
             element={<Navigate to={currentUser ? "/" : "/login"} replace />}
