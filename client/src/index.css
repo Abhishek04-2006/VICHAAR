@@ -2,10 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-body{
-    margin: 0;
-    padding: 0;
-    background-color: #030F26;
-    color: #F8FAFC;
-     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+/* Light Mode Defaults */
+:root {
+  --surface-bg: #F8FAFC;
+  --surface-card: #FFFFFF;
+  --surface-hover: #F1F5F9;
+  --surface-border: #E2E8F0;
+
+  --content-title: #0F172A;
+  --content-body: #334155;
+  --content-muted: #64748B;
+}
+
+/* Dark Mode Overrides (Aapke original charcoal colors) */
+html.dark {
+  --surface-bg: #090A0D;
+  --surface-card: #111317;
+  --surface-hover: #181A20;
+  --surface-border: #1F2228;
+
+  --content-title: #F4F4F5;
+  --content-body: #D4D4D8;
+  --content-muted: #71717A;
+}
+
+body {
+  background-color: var(--surface-bg);
+  color: var(--content-body);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }

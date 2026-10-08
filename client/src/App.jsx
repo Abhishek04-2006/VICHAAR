@@ -13,8 +13,9 @@ import CreatePostModal from './components/CreatePostModal';
 import LoginPage from './pages/Login';
 import HomePage from './pages/Home';
 import ProfilePage from './pages/Profile';
-import useDebounce from './hooks/useDebounce';
 import CategoriesPage from './pages/Categories';
+import SettingsPage from './pages/Settings';
+import useDebounce from './hooks/useDebounce';
 
 export default function App() {
   const [posts, setPosts] = useState([]);
@@ -24,6 +25,26 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const debouncedSearch = useDebounce(searchQuery, 350);
+
+  // Global Dark / Light Theme State with LocalStorage
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('vichaar_theme') || 'dark';
+  });
+
+  // Apply theme class to <html> element
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    localStorage.setItem('vichaar_theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
 
   // Auth State
   const [currentUser, setCurrentUser] = useState(() => {
@@ -82,6 +103,12 @@ export default function App() {
     localStorage.setItem('user', JSON.stringify(updatedUserData));
   };
 
+  const handleCategorySelect = (categoryName) => {
+    setSelectedCategory(categoryName);
+    setActiveTab('home');
+    navigate('/');
+  };
+
   const handleLogout = () => {
     localStorage.clear();
     setCurrentUser(null);
@@ -89,14 +116,16 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#090A0D] text-[#EDEDED] flex flex-col font-sans selection:bg-blue-600 selection:text-white">
-      {/* Navbar */}
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#090A0D] text-[#0F172A] dark:text-[#EDEDED] flex flex-col font-sans selection:bg-blue-600 selection:text-white transition-colors duration-200">
+      {/* Navbar with optional theme toggle */}
       {currentUser && (
         <Navbar
           currentUser={currentUser}
           onLogout={handleLogout}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
+          theme={theme}
+          onToggleTheme={toggleTheme}
         />
       )}
 
@@ -108,7 +137,9 @@ export default function App() {
             setActiveTab={(tab) => {
               setActiveTab(tab);
               if (tab === 'home') navigate('/');
+              else if (tab === 'categories') navigate('/categories');
               else if (tab === 'profile') navigate('/profile');
+              else if (tab === 'settings') navigate('/settings');
             }}
             currentUser={currentUser}
             onOpenLogin={() => navigate('/login')}
@@ -156,7 +187,19 @@ export default function App() {
             }
           />
 
-          {/* 3. Profile Page (with onUserUpdate callback) */}
+          {/* 3. Categories Hub */}
+          <Route
+            path="/categories"
+            element={
+              currentUser ? (
+                <CategoriesPage onSelectCategory={handleCategorySelect} />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+
+          {/* 4. Profile Page */}
           <Route
             path="/profile"
             element={
@@ -164,6 +207,22 @@ export default function App() {
                 <ProfilePage
                   currentUser={currentUser}
                   onUserUpdate={handleUserUpdate}
+                />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+
+          {/* 5. Platform Settings Page */}
+          <Route
+            path="/settings"
+            element={
+              currentUser ? (
+                <SettingsPage
+                  currentUser={currentUser}
+                  theme={theme}
+                  onToggleTheme={toggleTheme}
                 />
               ) : (
                 <Navigate to="/login" replace />

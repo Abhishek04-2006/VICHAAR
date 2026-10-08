@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Bell, LogOut, Award, CheckCircle2 } from 'lucide-react';
+import { Search, LogOut, Award, CheckCircle2 } from 'lucide-react';
 
 export default function Navbar({ currentUser, searchQuery, setSearchQuery, onOpenLogin, onLogout }) {
   return (
@@ -20,7 +20,7 @@ export default function Navbar({ currentUser, searchQuery, setSearchQuery, onOpe
               VICHAAR
             </span>
             <span className="text-[9px] text-[#71717A] font-mono tracking-widest uppercase mt-1 block truncate">
-              Campus Discourse
+              OPINION PLATFORM
             </span>
           </div>
         </div>
@@ -43,14 +43,6 @@ export default function Navbar({ currentUser, searchQuery, setSearchQuery, onOpe
         <div className="flex items-center gap-3 shrink-0">
           {currentUser ? (
             <div className="flex items-center gap-3">
-              <button 
-                type="button" 
-                className="p-2 rounded-xl bg-[#111317] border border-[#22252E] text-[#8E929E] hover:text-[#F4F4F5] transition-colors"
-                title="Notifications"
-              >
-                <Bell className="w-4 h-4" />
-              </button>
-
               <div className="flex items-center gap-2.5 pl-3 border-l border-[#1F2228]">
                 {/* Dynamic Real Avatar */}
                 <div className="w-8 h-8 rounded-xl bg-[#181A20] border border-[#272B35] overflow-hidden flex items-center justify-center text-[#EDEDED] text-xs font-bold shrink-0">
